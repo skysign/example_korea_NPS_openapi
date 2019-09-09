@@ -1,2 +1,301 @@
-# example_korea_NPS_openapi
-R에서 국민연금 OpenAPI 사용하기
+‘국민연금 가입현황’ OpenAPI 사용하기
+====================================
+
+여기서는 ‘국민연금 가입현황’ OpenAPI를 사용하는 방법을 알아 보겠습니다.
+국민연금 OpenAPI뿐만 아니라, 다른 OpenAPI도 사용방법은 비슷합니다.
+
+사용하기 위해서는 우선 사용자 등록을 해야 하구요, 그 다음 사용할
+OpenAPI에 키를 발급 받아야 합니다.
+
+사용자 등록
+-----------
+
+-   <a href="https://www.data.go.kr/" class="uri">https://www.data.go.kr/</a>
+    에 가입합니다.
+
+OpenAPI key 발급받기
+--------------------
+
+-   로그인 한 뒤, 아래 ‘국민연금 가입현황’ OpenAPI에 접속합니다.
+-   <a href="https://www.data.go.kr/dataset/15005710/openapi.do" class="uri">https://www.data.go.kr/dataset/15005710/openapi.do</a>
+
+-   아래 파일에 key를 발급 받는 방법에 대해서, 잘 설명 되어 있습니다.
+-   IROS5\_OA\_DV\_0401\_OpenAPI활용가이드\_국민연금가입통계정보서비스(국민연금공단)\_v1.0.docx
+
+브라우저에서 OpenAPI 사용해 보기
+--------------------------------
+
+아래 URL은 국민연금 가입현황 OpenAPI 사용 예제입니다. 브라우저에 copy &
+paste해서 사용하실 수 있구요, serviceKey 부분만 발급 받은 키로
+변경해주세요.
+
+-   참고 URL
+
+<!-- -->
+
+    http://apis.data.go.kr/B552015/NpsSbscrbInfoProvdService/getSbscrbSttusInfoSearch?ldong_addr_mgpl_dg_cd=11&ldong_addr_mgpl_sggu_cd=11110&ldong_addr_mgpl_sggu_emd_cd=11110101&jnngp_age=28&sex_dvcd=M&jnng_brkd_jnngp_clss_cd=0&serviceKey=tDB6NfO6idgyO2qtGtRnz8NgTQX63hRhwHTfyXUC2hGgRqJLDDd2AkaVG5GJ84W7yvNnu%2Fs%2FUQ4hP5lPToXNQg%3D%3D
+
+-   아래 URL에서 \[\] 부분을 발급받은 키로 변경해주세요
+
+<!-- -->
+
+    http://apis.data.go.kr/B552015/NpsSbscrbInfoProvdService/getSbscrbSttusInfoSearch?ldong_addr_mgpl_dg_cd=11&ldong_addr_mgpl_sggu_cd=11110&ldong_addr_mgpl_sggu_emd_cd=11110101&jnngp_age=28&sex_dvcd=M&jnng_brkd_jnngp_clss_cd=0&serviceKey=[]
+
+URL의 각 부분의 의미를 알아보겠습니다.
+
+기본이 되는 국민연금 가입현황 OpenAPI URL입니다.
+
+    http://apis.data.go.kr/B552015/NpsSbscrbInfoProvdService/getSbscrbSttusInfoSearch
+
+뒤에 파라미터가 온다는 의미로 ’?’를 붙여 주고요
+
+    ?
+
+그뒤에 오는 스트링은 파라미터 이름입니다.
+
+ldong\_addr\_mgpl\_dg\_cd은 법정동코드의 시도코드, 여기서는 **서울시**
+코드인 **11**을 사용합니다.
+
+    ldong_addr_mgpl_dg_cd=11
+
+파라미터 사이는 **&**로 구분합니다.
+
+    &
+
+법정동코드 군구코드 파라미터로, **서울시 종로구** 코드 **11110**을
+사용합니다.
+
+    ldong_addr_mgpl_sggu_cd=11110
+
+법정동코드 읍면동 코드 파라미터로, **서울특별시 종로구 청운동** 코드
+**11110101**을 사용합니다.
+
+    ldong_addr_mgpl_sggu_emd_cd=11110101
+
+가입자 연령 파라미터, 여기서는 28세를 사용합니다.
+
+    jnngp_age=28
+
+성별코드, **M** 남자, **F** 여자를 뜻합니다. **M**를 사용합니다.
+
+    sex_dvcd=M
+
+가입내역가입자종별코드, **0:사업장** 이, 회사에근무하면서 국민연금을
+납부하고 있는 사람을 의미합니다.
+
+    jnng_brkd_jnngp_clss_cd=0
+
+serviceKey OpenAPI를 사용하기위한 키값으로, 사용자별로 서로 다른 키가
+발급되며, 사용량 제한등을 서버에서 할 때, 사용합니다.
+
+    serviceKey=tDB6NfO6idgyO2qtGtRnz8NgTQX63hRhwHTfyXUC2hGgRqJLDDd2AkaVG5GJ84W7yvNnu%2Fs%2FUQ4hP5lPToXNQg%3D%3D
+
+**여기에서 사용한 serviceKey 파라미터는, 제가 과거에 사용했던 키로,
+현재는 사용할 수 없는 키입니다.** **공공데이터포털(data.go.kr)에 가입한
+뒤, 발급받은 키를 사용하세요**
+
+R에서 OpenAPI 사용해보기
+========================
+
+앞에서 브라우저에서 사용할 때는 URL만 있으면 사용이 가능했습니다.
+브라우저는 HTTP request를 서버로 보내고, 받은 내용을 브라우저에 글자로
+표시(렌더링)을 해줍니다.
+
+R에서 OpenAPI를 사용하려면, 브라우저 대신에, HTTP request를 보내고
+response를 받아줄 httr 패키지가 필요합니다.
+
+사용할 패키지 설치
+------------------
+
+httr및 필요한 패키지를 설치합니다. 한번만 하면 됩니다.
+
+    # install.packages('httr')
+    # install.packages('xml2')
+    # install.packages("rjson")
+
+### 주의 할 점, key가 URL encoding 되어 있음
+
+키가 발급이 되었으면, **마이페이지 -&gt; 오픈API -&gt; 인증키** 발급현황
+메뉴에서, 발급된 키를 확인할 수 있습니다. 주의할 점은 키가 URL
+encoding이 되어 있다는 점 입니다.
+
+브라우저에 copy & paste해서 사용할 URL은 URL인코딩이 되어 있어야 하지만,
+R코드에서 사용할 key는 URL decoding되어 있는 키를 사용해야 합니다.
+
+뒤에서 OpenAPI를 호출하기 위해서, httr 패키지를 사용합니다. httr패키지의
+Get함수는 자동으로 파라미터에 url encoding을 해주기 때문에, key를
+파라미터로 사용할 때, url decoding을 한 뒤에, 파라미터로 사용해야
+합니다.
+
+-   URL 인코딩되어 있는 serviceKey
+    tDB6NfO6idgyO2qtGtRnz8NgTQX63hRhwHTfyXUC2hGgRqJLDDd2AkaVG5GJ84W7yvNnu%2Fs%2FUQ4hP5lPToXNQg%3D%3D
+-   URL 인코딩되어 있지 않은 원래 serviceKey
+    tDB6NfO6idgyO2qtGtRnz8NgTQX63hRhwHTfyXUC2hGgRqJLDDd2AkaVG5GJ84W7yvNnu/s/UQ4hP5lPToXNQg==
+
+-   URL 인코딩/디코딩에 대해서는 아래 사이트 참고하세요.
+-   <a href="https://m.blog.naver.com/westfafa/221048132693" class="uri">https://m.blog.naver.com/westfafa/221048132693</a>
+
+‘국민연금 가입현황’ OpenAPI를 R함수로 만들기
+--------------------------------------------
+
+‘국민연금 가입현황’ OpenAPI를 R함수로 만들어 보겠습니다.
+
+-   법정동코드, bjd\_code 시도/군구/읍면동/리 코드로 구성된 법정동코드
+    총 10자리 입니다.
+-   시도코드, 군구코드는 읍면동 코드로 부터 분리해 낼 수 있습니다.
+-   앞의 2자리가 시도코드, 그뒤 3자리가 군구 코드입니다.
+-   그뒤 3자리가 읍면동코드, 마지막 2자리가 리코드입니다
+-   ‘국민연금 가입현황’ OpenAPI에서는 **’리’코드**는 생략한,
+    **’동’코드** 까지만 사용됩니다.
+-   나중에 10자리 법정동 코드를 사용할 것이기 때문에, substring()함수를
+    사용해서, 시도/군구/읍면동 코드를 분리했습니다.
+-   가입자 연령, age
+-   성별 sex
+-   가입내역 가입장종별코드 clss
+-   servicekey 키
+
+함수이름 NP\_getSbscrbSttusInfoSearch() (국민연금 National Pension
+약자로)
+
+    library(httr)
+
+    NP_getSbscrbSttusInfoSearch <- function(bjd_code,
+                                            age,
+                                            sex,
+                                            clss,
+                                            key) {
+      myurl = 'http://apis.data.go.kr/B552015/NpsSbscrbInfoProvdService/getSbscrbSttusInfoSearch'
+
+      res <- httr::GET(
+        url = myurl,
+        accept_xml(), # xml 포맷으로 받을 때
+        # accept_json(), json 포맷으로 받을 때
+        query = list(
+          ldong_addr_mgpl_dg_cd = substring(bjd_code, 1, 2),
+          ldong_addr_mgpl_sggu_cd = substring(bjd_code, 1, 5),
+          ldong_addr_mgpl_sggu_emd_cd = substring(bjd_code, 1, 8),
+          jnngp_age = age,
+          sex_dvcd = sex,
+          jnng_brkd_jnngp_clss_cd = clss,
+          serviceKey = key
+        )
+      )
+      
+      return(httr::content(res, as = 'text', encoding = 'UTF-8'))
+    }
+
+만든 함수 사용해보기
+--------------------
+
+키 값은 NPS\_openapi\_key.private 파일에서 읽거 오겠습니다.
+
+    bjd_code = '1111010100'
+    age = 28
+    sex = 'M'
+    clss = 0
+
+    key <- readLines('./NPS_openapi_key.private', n = 1)
+    res = NP_getSbscrbSttusInfoSearch(bjd_code, age, sex, clss, key)
+    res
+
+    ## [1] "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><response><header><resultCode>00</resultCode><resultMsg>NORMAL SERVICE.</resultMsg></header><body><item><avgAntcPnsAmt>921571</avgAntcPnsAmt><jnngBrkdSgmntPrsnCnt>7</jnngBrkdSgmntPrsnCnt><rcgnAvgAmt>3228761</rcgnAvgAmt><rcgnAvgMcnt>13</rcgnAvgMcnt></item></body></response>"
+
+XML 스트링에서 XMLNode 오브젝트로 변환하기
+------------------------------------------
+
+xmlParse()와 xmlRoot()함수를 아래와 같이 사용하면, 서버에서 응답으로
+받은 xml 스트링을 XMLNode 클래스의 오브젝트로 변환할 수 있습니다.
+변환하면, xpath를 사용해서, 각 노드의 값을 받아 올 수 있습니다.
+
+    library(XML)
+
+    xmlResult <- xmlParse(res)
+    xmlRoot = xmlRoot(xmlResult)
+    xmlRoot
+
+    ## <response>
+    ##   <header>
+    ##     <resultCode>00</resultCode>
+    ##     <resultMsg>NORMAL SERVICE.</resultMsg>
+    ##   </header>
+    ##   <body>
+    ##     <item>
+    ##       <avgAntcPnsAmt>921571</avgAntcPnsAmt>
+    ##       <jnngBrkdSgmntPrsnCnt>7</jnngBrkdSgmntPrsnCnt>
+    ##       <rcgnAvgAmt>3228761</rcgnAvgAmt>
+    ##       <rcgnAvgMcnt>13</rcgnAvgMcnt>
+    ##     </item>
+    ##   </body>
+    ## </response>
+
+각 노드의 값 찾기
+-----------------
+
+xpath 스트링을 사용해서, xmlRoot에서 각 노드의 값을 찾을 수 있습니다.
+
+-   XML에서 xpath를 만드는 방법은 아래 사이트를 참고하세요.
+-   <a href="https://xmltoolbox.appspot.com/xpath_generator.html" class="uri">https://xmltoolbox.appspot.com/xpath_generator.html</a>
+
+<!-- -->
+
+    xPath_resultCode = '/response/header/resultCode/text()'
+    node = xpathApply(xmlRoot, xPath_resultCode)
+    node[[1]]
+
+    ## 00
+
+    xPath_resultMsg = '/response/header/resultMsg/text()'
+    node = xpathApply(xmlRoot, xPath_resultMsg)
+    node[[1]]
+
+    ## NORMAL SERVICE.
+
+    xPath_avgAntcPnsAmt = '/response/body/item/avgAntcPnsAmt/text()'
+    node = xpathApply(xmlRoot, xPath_avgAntcPnsAmt)
+    node[[1]]
+
+    ## 921571
+
+    xPath_jnngBrkdSgmntPrsnCnt = '/response/body/item/jnngBrkdSgmntPrsnCnt/text()'
+    node = xpathApply(xmlRoot, xPath_jnngBrkdSgmntPrsnCnt)
+    node[[1]]
+
+    ## 7
+
+    xPath_rcgnAvgAmt = '/response/body/item/rcgnAvgAmt/text()'
+    node = xpathApply(xmlRoot, xPath_rcgnAvgAmt)
+    node[[1]]
+
+    ## 3228761
+
+    xPath_rcgnAvgMcnt = '/response/body/item/rcgnAvgMcnt/text()'
+    node = xpathApply(xmlRoot, xPath_rcgnAvgMcnt)
+    node[[1]]
+
+    ## 13
+
+마무리 하며
+===========
+
+OpenAPI를 사용해서, ‘국민연금 가입현황’ 데이터를 R에서 불러 오는 방법을
+알아 보았습니다. 국민연금 가입현황 데이터를 사용하면, 회사 주소를
+기준으로, 인구가 연령대별로 어떻게 분포 되어 있는지 알 수 있습니다.
+
+아래 ’R에서 한국지도 그려보기’와 함께 사용하면, 지도위에 인구 분포를
+시각화 하는 것도 가능할 것입니다.
+
+    https://github.com/skysign/drawing_south_korea_map_in_R
+
+사실은 아래의 문제를 해결해 보고자, R로 개발해 보고 있습니다. **‘특정
+위치에서 모임/행사 등을 연다고 할 때, 퇴근 후 참석 할 수 있는 직장인이
+몇명이나 될까?’**
+
+이 리포는 그중에, 인구 분포를 얻어 오고자, ‘국민연금 가입현황’ 데이터를
+사용한 것입니다. 많은 비영리 단체들이 고민하고 있는 부분이라고 생각이
+되서… 개발하고 있구요, 개발 되는 대로 아래 리포에 업로드 예정입니다.
+
+    https://github.com/skysign/HowManyComeHere
+
+R에서 OpenAPI사용하시는 분들에게, 도움이 되셨기를 바랍니다.
+
+2019년 9월 9일 김병건 (skysign atsign gmail.com)
